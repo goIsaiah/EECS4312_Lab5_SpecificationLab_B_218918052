@@ -41,9 +41,7 @@ def is_allocation_feasible(
                 total_requested[name] = total_requested.get(name, 0) + amount
 
     for name, total_amount in total_requested.items():
-        if name not in resources:
-            return False
-        if total_amount > resources[name]:
+        if name not in resources or total_amount > resources[name]:
             return False
     
     return True

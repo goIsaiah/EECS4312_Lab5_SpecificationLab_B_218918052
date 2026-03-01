@@ -42,6 +42,85 @@ pytest -v
 (Note: If you get an error saying "pytest is not recognized", you may need to install it first by running pip install pytest in that same terminal).
 
 --------------------------------------------------
-Prompt 2: "Copy paste your question"
-LLM Response 2: "Copy paste LLMs response"
+Prompt 2: I did pip install pytest, and just pytest in the terminal and it's still not working
+LLM Response 2:
+Gemini said
+Ah, the classic Windows Python quirk! This is incredibly common and can be super frustrating.
+
+When you run pip install pytest, Windows downloads the pytest program into a specific Python folder. However, Windows often doesn't know to look in that specific folder when you type a command into the terminal (this is known as a "PATH environment variable" issue). So, it tells you the command isn't recognized, even though you just installed it.
+
+Here is the bulletproof workaround that bypasses this issue entirely.
+
+Instead of typing just pytest, tell Python directly to run the pytest module for you.
+
+In your VS Code terminal, run this exact command:
+
+PowerShell
+python -m pytest
+(Or for the detailed output:)
+
+PowerShell
+python -m pytest -v
+By adding python -m  to the front, you are saying: "Hey Python, use your own internal pathways to find the pytest module I just installed and run it."
+--------------------------------------------------
+
+--------------------------------------------------
+Prompt 3: Here is my code <insert solution.py here>
+Write me 5 test cases for it
+
+LLM Response 3:
+Here are 5 additional test cases that cover different edge cases and boundary conditions. These will test how robust your function is when thrown unexpected (but valid) scenarios.
+
+Additional Test Cases
+Python
+
+def test_empty_requests_list():
+    # Edge Case: No requests made
+    # Constraint: total demand (0) <= capacity
+    # Reason: An empty list of requests should always be feasible, as it requires 0 resources.
+    resources = {'cpu': 10, 'mem': 16}
+    requests = []
+    assert is_allocation_feasible(resources, requests) is True
+
+def test_exact_capacity_match():
+    # Boundary Case: Demand exactly matches capacity
+    # Constraint: total demand == capacity
+    # Reason: The system should allow the allocation if the total requests hit the exact limit without exceeding it.
+    resources = {'cpu': 5, 'gpu': 2}
+    requests = [{'cpu': 3, 'gpu': 1}, {'cpu': 2, 'gpu': 1}]
+    assert is_allocation_feasible(resources, requests) is True
+
+def test_negative_and_zero_request_amounts():
+    # Edge Case: Requests contain 0 or negative amounts
+    # Constraint: negative requests should not artificially "restore" capacity
+    # Reason: Tests the `if amount > 0:` logic. If the -2 was added, the total would be 4 (feasible). Because it's ignored, the total is 6 (infeasible).
+    resources = {'cpu': 5}
+    requests = [{'cpu': 6}, {'cpu': -2}, {'cpu': 0}] 
+    assert is_allocation_feasible(resources, requests) is False
+
+def test_no_resources_available():
+    # Edge Case: Resource pool is completely empty
+    # Constraint: requested resources not in pool
+    # Reason: Any request > 0 should fail if the system has absolutely no resources to offer.
+    resources = {}
+    requests = [{'cpu': 1}]
+    assert is_allocation_feasible(resources, requests) is False
+
+def test_floating_point_capacities():
+    # Data Type Check: Using floats instead of ints
+    # Constraint: functional requirement with decimals
+    # Reason: The function signature allows `Number = Union[int, float]`, so we need to ensure decimals sum and compare correctly.
+    resources = {'cpu': 2.5, 'mem': 4.0}
+    requests = [{'cpu': 1.1, 'mem': 2.0}, {'cpu': 1.4, 'mem': 2.0}]
+    assert is_allocation_feasible(resources, requests) is True
+Why these are good tests:
+Empty states: test_empty_requests_list and test_no_resources_available ensure your code doesn't crash when loops have nothing to iterate over.
+
+Boundaries: test_exact_capacity_match ensures you used > instead of >= when checking for overloads.
+
+Hidden bugs: test_negative_and_zero_request_amounts makes sure someone can't "game" the system by requesting negative resources to offset their heavy requests.
+
+Type checking: test_floating_point_capacities confirms that your code honors the Number = Union[int, float] hint provided in the skeleton file.
+
+Would you like me to help you run these new tests in your terminal using the python -m pytest -v command we got working earlier to verify they all pass?
 --------------------------------------------------
