@@ -1,8 +1,45 @@
 ## Student Name:
 ## Student ID: 
 
-Prompt 1: "Copy paste your question"
-LLM Response 1: "Copy paste LLMs response"
+Prompt 1: 
+In the instructions it says:
+## 4. Run All Tests
+Navigate to the folder containing the files and run:
+```bash
+pytest
+```
+Or with more detailed output:
+```bash
+pytest -v
+```
+---
+How do I run this on vscode? I am not using Linux, I am using windows
+
+LLM Response 1:
+It is completely normal to be thrown off by seeing bash when you are on Windows! In documentation, bash is often just used as a generic label to highlight the text as terminal code. The good news is that the command itself—pytest—works the exact same way on Windows as it does on Linux.
+
+In VS Code on Windows, you have two great ways to run these tests: using the Integrated Terminal (which matches your instructions exactly) or using VS Code's Testing UI (which gives you a nice visual layout).
+
+Here is how to do both.
+
+Method 1: Using the Integrated Terminal (Fastest)
+This method directly mirrors the instructions you were given.
+
+Open the Terminal in VS Code: You can do this by pressing Ctrl + ` (the backtick key, usually above the Tab key) on your keyboard, or by clicking Terminal > New Terminal in the top menu.
+
+Check your folder: By default, the terminal should open to the folder your project is in.
+
+Run the command: In the terminal window (which will likely be running PowerShell or Command Prompt), simply type what the instructions say and press Enter:
+
+PowerShell
+
+pytest
+Or for the detailed output:
+
+PowerShell
+
+pytest -v
+(Note: If you get an error saying "pytest is not recognized", you may need to install it first by running pip install pytest in that same terminal).
 
 --------------------------------------------------
 Prompt 2: "Copy paste your question"

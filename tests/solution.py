@@ -30,16 +30,20 @@ def is_allocation_feasible(
 
     """
     # TODO: Implement this function
-    total_requests: Dict[str, Number] = {}
-    for request in requests:
-        for resource_name, amount in request.items():
-            for resource_name, amount in request.items():
-                # Remove all cases where the amount is <= 0
-                if amount > 0:
-                    total_requests[resource_name] = total_requests.get(resource_name, 0) + amount
+    total_requested: Dict[str, Number] = {}
 
-    # for resource_name, total_amount in requests.items():
-    #     if resource_name not in resources or total_amount > resources[resource_name]:
-    #         return False
+    for request in requests:
+        if not isinstance(request, dict):
+            raise ValueError("Request is not a dictionary.")
         
+        for name, amount in request.items():
+            if amount > 0:
+                total_requested[name] = total_requested.get(name, 0) + amount
+
+    for name, total_amount in total_requested.items():
+        if name not in resources:
+            return False
+        if total_amount > resources[name]:
+            return False
+    
     return True
