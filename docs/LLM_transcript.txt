@@ -229,4 +229,150 @@ def test_raises_value_error_on_invalid_request_type():
 ---
 
 Since we've got the tests written out, would you like me to show you how to read the output terminal once you run `python -m pytest` on this file?
+
 --------------------------------------------------
+Prompt 1: 
+There is a new requirement for the solution and testing files:
+At least one resource must remain unallocated after assignment.  This requirement applies in addition to all previously described behaviour.  An allocation that satisfies all other conditions but consumes all available resources is no longer valid.  Update your solution tests and documents to incorporate this requirement.
+
+LLM Response 1:
+This is a great update. It introduces a strict "buffer" requirement, meaning a scenario where every single drop of available resources is consumed is now considered an invalid state.
+
+To satisfy this, we need to add a check at the end of the function to ensure there is at least one resource in the system where `available_capacity > total_requested`.
+
+Here is the updated solution code and the modified test suite to match.
+
+### 1. Updated Solution Code
+
+I've added the new logic right before the final `return True` statement.
+
+```python
+from typing import Dict, List, Union
+
+Number = Union[int, float]
+
+def is_allocation_feasible(
+    resources: Dict[str, Number],
+    requests: List[Dict[str, Number]]
+) -> bool:
+    """
+    Determine whether a set of resource requests can be satisfied given limited capacities,
+    ensuring at least one resource remains partially or fully unallocated.
+
+    Args:
+        resources : Dict[str, Number], Mapping from resource name to total available capacity.
+        requests : List[Dict[str, Number]], List of requests. Each request is a mapping from resource name to the amount required.
+
+    Returns:
+        True if the allocation is feasible AND leaves at least one unallocated resource, False otherwise.
+    """
+    # If the system has zero resources to begin with, nothing can remain unallocated
+    if not resources:
+        return False
+
+    total_requested: Dict[str, Number] = {}
+
+    for request in requests:
+        if not isinstance(request, dict):
+            raise ValueError("Request is not a dictionary.")
+        
+        for name, amount in request.items():
+            if amount > 0:
+                total_requested[name] = total_requested.get(name, 0) + amount
+
+    # Check standard capacity constraints (can't ask for missing resources or exceed capacity)
+    for name, total_amount in total_requested.items():
+        if name not in resources or total_amount > resources[name]:
+            return False
+
+    # NEW REQUIREMENT: Ensure at least one resource is not completely consumed
+    has_unallocated = False
+    for name, capacity in resources.items():
+        # If capacity is greater than what was requested (or if it wasn't requested at all, defaulting to 0)
+        if capacity > total_requested.get(name, 0):
+            has_unallocated = True
+            break
+            
+    if not has_unallocated:
+        return False
+        
+    return True
+
+```
+
+---
+
+### 2. Updated Test Cases
+
+I have added a new test case (**Test 6**) specifically designed to catch the exact allocation scenario and assert that it now correctly returns `False`. I also updated **Test 1** slightly to make the math explicitly clear for the new rule.
+
+```python
+import pytest
+# from allocation import is_allocation_feasible 
+
+def test_feasible_allocation_under_capacity():
+    """Test 1: Requests are within limits, leaving some resources unallocated."""
+    resources = {"CPU": 10, "RAM": 32, "Disk": 100}
+    requests = [
+        {"CPU": 2, "RAM": 4},
+        {"CPU": 4, "RAM": 16, "Disk": 50},
+    ]
+    # Total needed: CPU=6, RAM=20, Disk=50. 
+    # Leftover: CPU=4, RAM=12, Disk=50. (Valid: unallocated resources exist)
+    assert is_allocation_feasible(resources, requests) is True
+
+def test_infeasible_allocation_exceeds_capacity():
+    """Test 2: Total requests exceed the available capacity."""
+    resources = {"CPU": 10, "RAM": 32}
+    requests = [
+        {"CPU": 6, "RAM": 20},
+        {"CPU": 5, "RAM": 10} 
+    ]
+    assert is_allocation_feasible(resources, requests) is False
+
+def test_infeasible_request_for_missing_resource():
+    """Test 3: A request asks for a resource that doesn't exist."""
+    resources = {"CPU": 10, "RAM": 32}
+    requests = [
+        {"CPU": 2, "GPU": 1} 
+    ]
+    assert is_allocation_feasible(resources, requests) is False
+
+def test_empty_requests_list():
+    """Test 4: An empty list of requests leaves all resources unallocated."""
+    resources = {"CPU": 10, "RAM": 32}
+    requests = []
+    assert is_allocation_feasible(resources, requests) is True
+
+def test_raises_value_error_on_invalid_request_type():
+    """Test 5: The function raises a ValueError if a request is not a dictionary."""
+    resources = {"CPU": 10, "RAM": 32}
+    requests = [
+        {"CPU": 2},
+        "I need 4 CPUs please"
+    ]
+    with pytest.raises(ValueError, match="Request is not a dictionary."):
+        is_allocation_feasible(resources, requests)
+
+def test_infeasible_exact_allocation():
+    """Test 6 (NEW): Total requests exactly consume ALL available resources."""
+    resources = {"CPU": 10, "RAM": 32}
+    requests = [
+        {"CPU": 5, "RAM": 16},
+        {"CPU": 5, "RAM": 16}
+    ]
+    # Total needed: CPU=10, RAM=32. 
+    # Leftover: CPU=0, RAM=0. (Invalid: no unallocated resources remain)
+    assert is_allocation_feasible(resources, requests) is False
+
+```
+
+### What Changed?
+
+* **Edge Case Handling:** Added an early return of `False` if the `resources` dictionary is completely empty, since a system with zero resources can't have an "unallocated" resource left over.
+* **The Buffer Check:** Added a loop that iterates through all resources in the main pool. If it finds even one resource where the requested amount is lower than the available capacity, it flips the `has_unallocated` flag to `True`.
+* **Testing:** The new `test_infeasible_exact_allocation` ensures this rule works correctly in practice.
+
+---
+
+Would you like me to show you how to check your code coverage (using a tool called `pytest-cov`) so you can visually verify that your tests are hitting every single line of this new code?
